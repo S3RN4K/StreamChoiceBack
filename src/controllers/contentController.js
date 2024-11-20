@@ -75,26 +75,33 @@ const deleteContent = async (req, res) => {
     }
 };
 
-// Controlador para buscar contenido por título
 const searchContent = async (req, res) => {
     const { query } = req.query;
-  
+
     if (!query || query.trim() === "") {
-      return res.status(400).json({ message: "El término de búsqueda no puede estar vacío" });
+        return res.status(400).json({ message: "El término de búsqueda no puede estar vacío" });
     }
-  
+
     try {
-      const [rows] = await db.execute(
-        "SELECT * FROM Contenido WHERE titulo LIKE ?",
-        [`%${query}%`]
-      );
-  
-      res.status(200).json(rows);
+        const [rows] = await db.execute(
+            `SELECT c.id_contenido, c.titulo, c.descripcion, c.imagen_url,
+             GROUP_CONCAT(p.nombre) AS plataformas, 
+             GROUP_CONCAT(p.logo_url) AS logos
+             FROM Contenido c
+             LEFT JOIN Disponibilidad d ON c.id_contenido = d.id_contenido
+             LEFT JOIN Plataformas p ON d.id_plataforma = p.id_plataforma
+             WHERE c.titulo LIKE ?
+             GROUP BY c.id_contenido`,
+            [`%${query}%`]
+        );
+
+        res.status(200).json(rows);
     } catch (error) {
-      console.error("Error al buscar contenido:", error);
-      res.status(500).json({ message: "Error al buscar contenido" });
+        console.error("Error al buscar contenido:", error);
+        res.status(500).json({ message: "Error al buscar contenido" });
     }
-  };
+};
+
 
 module.exports = {
     createContent,
