@@ -1,4 +1,5 @@
 const contentModel = require('../models/contentModel');
+const db = require("../config/db");
 
 // Crear contenido
 const createContent = async (req, res) => {
@@ -74,9 +75,31 @@ const deleteContent = async (req, res) => {
     }
 };
 
+// Controlador para buscar contenido por título
+const searchContent = async (req, res) => {
+    const { query } = req.query;
+  
+    if (!query || query.trim() === "") {
+      return res.status(400).json({ message: "El término de búsqueda no puede estar vacío" });
+    }
+  
+    try {
+      const [rows] = await db.execute(
+        "SELECT * FROM Contenido WHERE titulo LIKE ?",
+        [`%${query}%`]
+      );
+  
+      res.status(200).json(rows);
+    } catch (error) {
+      console.error("Error al buscar contenido:", error);
+      res.status(500).json({ message: "Error al buscar contenido" });
+    }
+  };
+
 module.exports = {
     createContent,
     getAllContent,
     updateContent,
     deleteContent,
+    searchContent,
 };
